@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.peace.readhub.mapper.NewsMapper">
+    <insert id="saveNews" parameterType="cn.peace.readhub.domain.NewsDO">
+        INSERT IGNORE INTO news(title,brief,url,siteId,create_time)
+        VALUES
+        <foreach collection="list" item="news" separator=",">
+            (#{news.title},#{news.brief},#{news.url},#{news.siteId},now())
+        </foreach>
+    </insert>
+
+    <select id="listNews" resultType="cn.peace.readhub.domain.NewsVO">
+		SELECT
+		title,brief,url,siteName,siteAddr,create_time as time
+		FROM news JOIN
+		news_site ON news.siteId = news_site.siteId
+		ORDER BY create_time DESC
+		LIMIT 20
+	</select>
+
+    <select id="getNewsCount" resultType="int">
+		SELECT count(*) FROM news
+	</select>
+
+    <select id="checkUrlIfExists" parameterType="String" resultType="String">
+		SELECT url FROM news WHERE url = #{url}
+	</select>
+
+    <insert id="saveNewsSpiderRecord" parameterType="cn.peace.readhub.domain.NewsSpiderRecord">
+		INSERT INTO
+		news_record(newsSpiderId,exeTime,total,repe_Rate,newItemCount)
+		VALUES(#{newsSpiderId},now(),#{total},#{repe_Rate},#{newItemCount})
+	</insert>
+
+    <select id="listNewsStatis" resultType="cn.peace.readhub.domain.NewsSpiderRecord">
+		SELECT siteName,total,newItemCount,ROUND(repe_Rate,2) as repe_Rate,exeTime
+		FROM news_record as r join news_site as s on r.newsSpiderId = s.siteId
+		WHERE exeTime>=now()-INTERVAL 3 HOUR
+	</select>
+
+</mapper>

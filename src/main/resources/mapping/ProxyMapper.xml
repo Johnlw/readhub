@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.peace.readhub.mapper.ProxyMapper">
+
+    <insert id="saveProxy" parameterType="java.util.List">
+        INSERT INTO proxy(ipAddr,port,anonymity,proxySpiderId,useCount,time)
+        VALUES
+        <foreach collection="list" item="proxy" separator=",">
+            (#{proxy.ipAddr},#{proxy.port},#{proxy.anonymity},#{proxy.proxySpiderId},#{proxy.useCount},now())
+        </foreach>
+    </insert>
+
+    <select id="getProxyCounts" resultType="cn.peace.readhub.domain.ProxyStatis">
+		SELECT siteName,ROUND((validCount/totalCount),2) AS validRate,totalCount,validCount
+		FROM
+		((SELECT proxySpiderId,COUNT(*) as validCount FROM proxy
+		WHERE useCount > 0 AND TIME >= NOW() - INTERVAL 1 DAY
+		GROUP BY proxySpiderId) AS a JOIN
+		  (SELECT proxySpiderId,COUNT(*) as totalCount FROM proxy
+		WHERE TIME >= NOW() - INTERVAL 1 DAY
+		GROUP BY proxySpiderId) AS b ON a.proxySpiderId = b.proxySpiderId
+		JOIN proxy_site ON a.proxySpiderId = proxy_site.`proxySpiderId`)
+	</select>
+
+</mapper>

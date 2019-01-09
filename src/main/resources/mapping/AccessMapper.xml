@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.peace.readhub.mapper.AccessMapper">
+
+    <insert id="saveAccessRecord" parameterType="cn.peace.readhub.domain.AccRcdDO">
+        INSERT INTO
+        access_record(ip,time,province,city,rectangle)
+        VALUES
+        <foreach collection="list" item="acc" separator=",">
+            (#{acc.ip},now(),#{acc.province},#{acc.city},#{acc.rectangle})
+        </foreach>
+    </insert>
+
+    <select id="listAccessRecordToday" resultType="cn.peace.readhub.domain.Visitor">
+		SELECT ip,concat(province," ",city) AS addr,count(ip) AS count FROM
+		access_record
+		WHERE TO_DAYS(now()) = TO_DAYS(time)
+		AND province IS NOT NULL
+		GROUP BY ip
+	</select>
+
+</mapper>
